@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cotízame — Delivery SOS</title>
+
+  <!-- Leaflet CSS (BSD-2-Clause) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <!-- Leaflet Geocoder CSS (MIT) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
+  <!-- Google Fonts: Nunito (SIL Open Font License) -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===========================
+       CSS VARIABLES & RESET
+    =========================== */
+    :root {
+      --blue:    #0ea5e9;
+      --blue-d:  #0284c7;
+      --orange:  #f97316;
+      --orange-d:#ea580c;
+      --dark:    #0f172a;
+      --mid:     #1e293b;
+      --muted:   #64748b;
+      --light:   #f1f5f9;
+      --white:   #ffffff;
+      --green:   #16a34a;
+      --red:     #ef4444;
+      --radius:  18px;
+      --shadow:  0 4px 24px rgba(15,23,42,0.12);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* ===========================
+       SPLASH / HERO HEADER
+    =========================== */
+    .hero {
+      background: linear-gradient(135deg, var(--dark) 0%, var(--mid) 60%, #1a3a5c 100%);
+      padding: 28px 20px 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 20%, rgba(14,165,233,0.18) 0%, transparent 60%),
+                  radial-gradient(ellipse at 20% 80%, rgba(249,115,22,0.15) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .hero-logo {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: white;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px;
+      box-shadow: 0 0 0 4px rgba(14,165,233,0.3), 0 8px 24px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .hero-logo img { width: 90%; height: 90%; object-fit: contain; }
+    .hero-brand {
+      font-size: 0.72em;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--blue);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .hero-title {
+      font-size: 1.9em;
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1.1;
+    }
+    .hero-title span { color: var(--orange); }
+    .hero-sub {
+      font-size: 0.82em;
+      color: rgba(255,255,255,0.55);
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    /* ===========================
+       MAIN CARD FLOAT
+    =========================== */
+    .main-wrap {
+      max-width: 480px;
+      margin: -50px auto 30px;
+      padding: 0 14px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(14,165,233,0.08);
+      animation: fadeUp 0.4s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===========================
+       SERVICE SELECTOR (InDriver-style)
+    =========================== */
+    .sec-label {
+      font-size: 0.68em;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .sec-label::after { content: ''; flex: 1; height: 1px; background: var(--light); }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .svc-btn {
+      background: var(--light);
+      border: 2px solid transparent;
+      border-radius: 14px;
+      padding: 14px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.22s;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .svc-btn:active { transform: scale(0.96); }
+    .svc-btn.active {
+      background: linear-gradient(135deg, rgba(14,165,233,0.1), rgba(249,115,22,0.08));
+      border-color: var(--blue);
+    }
+    .svc-icon { font-size: 1.9em; margin-bottom: 6px; }
+    .svc-name { font-size: 0.72em; font-weight: 800; color: var(--mid); line-height: 1.2; }
+    .svc-price-hint { font-size: 0.62em; color: var(--muted); margin-top: 2px; font-weight: 600; }
+    .svc-badge {
+      position: absolute; top: -5px; right: -5px;
+      background: var(--orange);
+      color: white;
+      font-size: 0.55em;
+      font-weight: 900;
+      padding: 2px 5px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ===========================
+       PANELS (shown per service)
+    =========================== */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ===========================
+       MAP
+    =========================== */
+    #map {
+      height: 260px;
+      border-radius: 14px;
+      border: 2px solid #e2e8f0;
+      z-index: 1;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .map-hint {
+      text-align: center;
+      font-size: 0.72em;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-radius: 10px;
+    }
+    .map-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .btn-map-gps {
+      background: linear-gradient(135deg, var(--blue), var(--blue-d));
+      color: white;
+      border: none;
+      padding: 11px;
+      border-radius: 11px;
+      font-weight: 800;
+      font-size: 0.78em;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .btn-map-reset {
+      background: #fee2e2;
+      color: var(--red);
+      border: none;
+      padding: 11px;
+      border-radius: 11px;
+      font-weight: 800;
+      font-size: 0.78em;
+      cursor: pointer;
+    }
+
+    /* ===========================
+       STOPS / PARADAS
+    =========================== */
+    .stops-list { margin-bottom: 10px; }
+    .stop-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border: 1px solid #e2e8f0;
+      font-size: 0.82em;
+      font-weight: 700;
+    }
+    .stop-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .stop-dot.origin { background: var(--blue); }
+    .stop-dot.stop   { background: var(--orange); }
+    .stop-dot.dest   { background: var(--green); }
+    .stop-txt { flex: 1; color: var(--mid); font-size: 0.9em; }
+    .stop-rm {
+      background: none; border: none; color: var(--red);
+      font-size: 1.1em; cursor: pointer; padding: 2px 4px;
+    }
+    .btn-add-stop {
+      width: 100%;
+      background: none;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 10px;
+      color: var(--blue);
+      font-weight: 800;
+      font-size: 0.8em;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-add-stop:hover { border-color: var(--blue); background: rgba(14,165,233,0.04); }
+
+    /* ===========================
+       INPUTS
+    =========================== */
+    .input-wrap { margin-bottom: 12px; }
+    .input-wrap label {
+      display: block;
+      font-size: 0.68em;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    input[type=text], input[type=number], input[type=tel], textarea, select {
+      width: 100%;
+      padding: 13px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 13px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--dark);
+      background: #f8fafc;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--blue);
+      background: white;
+    }
+    textarea { resize: none; min-height: 70px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* ===========================
+       EXTRAS CHECKBOXES
+    =========================== */
+    .extras-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .extra-opt {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 0.78em;
+      font-weight: 800;
+      color: var(--mid);
+      transition: 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .extra-opt input[type=checkbox] { display: none; }
+    .extra-opt.checked {
+      background: linear-gradient(135deg, rgba(14,165,233,0.1), rgba(249,115,22,0.06));
+      border-color: var(--blue);
+      color: var(--blue-d);
+    }
+    .extra-check {
+      width: 18px; height: 18px;
+      border-radius: 6px;
+      border: 2px solid #cbd5e1;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.75em;
+      transition: 0.2s;
+    }
+    .extra-opt.checked .extra-check {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: white;
+    }
+
+    /* ===========================
+       CARGA SELECTOR
+    =========================== */
+    .carga-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .carga-opt {
+      background: var(--light);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 12px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .carga-opt.selected {
+      background: rgba(14,165,233,0.08);
+      border-color: var(--blue);
+    }
+    .carga-icon { font-size: 1.5em; margin-bottom: 4px; }
+    .carga-name { font-size: 0.7em; font-weight: 800; color: var(--mid); }
+    .carga-price { font-size: 0.65em; color: var(--muted); margin-top: 1px; }
+
+    /* ===========================
+       MAIN CALCULATE BUTTON
+    =========================== */
+    .btn-calc {
+      width: 100%;
+      background: linear-gradient(135deg, var(--dark), var(--mid));
+      color: white;
+      border: none;
+      padding: 18px;
+      border-radius: 16px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.05em;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 16px rgba(15,23,42,0.25);
+    }
+    .btn-calc:active { transform: scale(0.98); }
+
+    /* ===========================
+       RESULT TICKET
+    =========================== */
+    #result-card {
+      display: none;
+      background: linear-gradient(135deg, var(--dark) 0%, #1a3a5c 100%);
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.4s ease both;
+    }
+    #result-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 80% 10%, rgba(14,165,233,0.25) 0%, transparent 55%),
+                  radial-gradient(ellipse at 10% 90%, rgba(249,115,22,0.2) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .ticket-header {
+      text-align: center;
+      margin-bottom: 18px;
+      position: relative;
+    }
+    .ticket-label {
+      font-size: 0.65em;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: var(--blue);
+      text-transform: uppercase;
+    }
+    .ticket-total {
+      font-size: 3.2em;
+      font-weight: 900;
+      color: white;
+      line-height: 1;
+      margin: 4px 0 2px;
+    }
+    .ticket-range {
+      font-size: 0.78em;
+      color: rgba(255,255,255,0.5);
+      font-weight: 700;
+    }
+
+    .ticket-divider {
+      border: none;
+      border-top: 1px dashed rgba(255,255,255,0.15);
+      margin: 14px 0;
+    }
+
+    .ticket-lines { margin-bottom: 14px; }
+    .ticket-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      font-size: 0.82em;
+    }
+    .ticket-line:last-child { border: none; }
+    .tl-name { color: rgba(255,255,255,0.6); font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .tl-val  { color: white; font-weight: 900; }
+    .tl-val.highlight { color: #fbbf24; }
+
+    /* ===========================
+       CONFIRM / ACTION BUTTONS
+    =========================== */
+    .confirm-section {
+      display: none;
+      margin-bottom: 14px;
+      animation: fadeUp 0.4s ease 0.1s both;
+    }
+    .btn-confirm {
+      width: 100%;
+      background: linear-gradient(135deg, var(--green), #15803d);
+      color: white;
+      border: none;
+      padding: 18px;
+      border-radius: 16px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.1em;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(22,163,74,0.35);
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-bottom: 10px;
+      transition: transform 0.15s;
+    }
+    .btn-confirm:active { transform: scale(0.98); }
+    .btn-recalc {
+      width: 100%;
+      background: rgba(100,116,139,0.1);
+      color: var(--muted);
+      border: 2px solid #e2e8f0;
+      padding: 12px;
+      border-radius: 13px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 0.9em;
+      cursor: pointer;
+    }
+
+    /* ===========================
+       LOADING SPINNER
+    =========================== */
+    .spinner-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,0.65);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .spinner-overlay.active { display: flex; }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 4px solid rgba(255,255,255,0.2);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .spinner-txt { color: white; font-weight: 800; font-size: 0.9em; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===========================
+       ALERT / TOAST
+    =========================== */
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--dark);
+      color: white;
+      padding: 12px 22px;
+      border-radius: 30px;
+      font-size: 0.85em;
+      font-weight: 700;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      z-index: 9999;
+      transition: transform 0.3s;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ===========================
+       FOOTER
+    =========================== */
+    .footer {
+      text-align: center;
+      padding: 20px 14px 40px;
+      font-size: 0.7em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .footer a { color: var(--blue); text-decoration: none; }
+
+    /* ===========================
+       LEAFLET CUSTOMIZATION
+    =========================== */
+    .leaflet-control-geocoder-form input {
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+    }
+    .leaflet-popup-content-wrapper {
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+    }
+
+    /* ===========================
+       PHONE INPUT
+    =========================== */
+    .phone-wrap {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .phone-prefix {
+      background: var(--light);
+      border: 2px solid #e2e8f0;
+      border-radius: 13px;
+      padding: 13px 12px;
+      font-weight: 800;
+      font-size: 0.9em;
+      color: var(--mid);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-logo">
+    <!-- SVG fallback del logo Delivery SOS (colores del logo real) -->
+    <svg viewBox="0 0 100 100" width="70" height="70" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 8 C30 8 15 25 15 45 C15 60 25 72 38 78 L50 92 L62 78 C75 72 85 60 85 45 C85 25 70 8 50 8Z" fill="url(#hg)"/>
+      <defs>
+        <linearGradient id="hg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#0ea5e9"/>
+          <stop offset="100%" style="stop-color:#f97316"/>
+        </linearGradient>
+      </defs>
+      <ellipse cx="50" cy="62" rx="18" ry="10" fill="rgba(255,255,255,0.2)"/>
+      <circle cx="50" cy="35" r="10" fill="white" opacity="0.9"/>
+      <rect x="35" y="50" width="30" height="18" rx="6" fill="white" opacity="0.85"/>
+      <circle cx="40" cy="72" r="5" fill="#0f172a" opacity="0.7"/>
+      <circle cx="60" cy="72" r="5" fill="#0f172a" opacity="0.7"/>
+    </svg>
+  </div>
+  <div class="hero-brand">Delivery SOS · SPS</div>
+  <div class="hero-title">Cotiza tu<br><span>envío ahora</span></div>
+  <div class="hero-sub">San Pedro Sula, Honduras 🇭🇳</div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-wrap">
+
+  <!-- CARD 1: SELECCIONA SERVICIO -->
+  <div class="card" style="animation-delay: 0.05s">
+    <div class="sec-label">¿Qué necesitás?</div>
+    <div class="services-grid">
+
+      <div class="svc-btn active" onclick="selectService('mensajeria', this)">
+        <div class="svc-icon">📦</div>
+        <div class="svc-name">Mensajería</div>
+        <div class="svc-price-hint">desde L.50</div>
+      </div>
+
+      <div class="svc-btn" onclick="selectService('mototaxi', this)">
+        <div class="svc-icon">🛵</div>
+        <div class="svc-name">Moto Taxi<br>Mujer</div>
+        <div class="svc-price-hint">desde L.60</div>
+        <div class="svc-badge">♀️</div>
+      </div>
+
+      <div class="svc-btn" onclick="selectService('tramites', this)">
+        <div class="svc-icon">📋</div>
+        <div class="svc-name">Trámites &amp; Gestiones</div>
+        <div class="svc-price-hint">desde L.80</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CARD 2: UBICACIÓN Y MAPA -->
+  <div class="card" style="animation-delay: 0.1s">
+    <div class="sec-label">📍 Origen y Destino</div>
+
+    <div class="map-actions">
+      <button class="btn-map-gps" onclick="activarGPS()">📍 Mi ubicación</button>
+      <button class="btn-map-reset" onclick="resetMapa()">🗑️ Limpiar mapa</button>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="map-hint" id="map-hint">
+      Toca el mapa para marcar 📍 Origen → 🏁 Destino
+    </div>
+
+    <!-- PARADAS MÚLTIPLES -->
+    <div id="stops-section">
+      <div class="stops-list" id="stops-list"></div>
+      <button class="btn-add-stop" onclick="agregarParada()">➕ Agregar parada intermedia</button>
+    </div>
+
+    <!-- DISTANCIA CALCULADA -->
+    <div id="dist-display" style="display:none; text-align:center; padding:10px; background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(249,115,22,0.06)); border-radius:12px; margin-top:10px;">
+      <span style="font-size:0.75em; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:1px;">Distancia estimada</span><br>
+      <span id="dist-km" style="font-size:1.8em; font-weight:900; color:var(--dark);">0.0 km</span>
+    </div>
+  </div>
+
+  <!-- CARD 3: DATOS DEL SERVICIO -->
+  <div class="card" style="animation-delay: 0.15s">
+    <div class="sec-label">📋 Detalles del servicio</div>
+
+    <!-- PANEL: MENSAJERÍA -->
+    <div id="panel-mensajeria" class="panel active">
+
+      <div class="sec-label" style="margin-bottom:10px;">Tipo de carga</div>
+      <div class="carga-grid" id="carga-select">
+        <div class="carga-opt selected" onclick="selCarga(this, 0)">
+          <div class="carga-icon">✉️</div>
+          <div class="carga-name">Liviana</div>
+          <div class="carga-price">&lt;15 lbs • +L.0</div>
+        </div>
+        <div class="carga-opt" onclick="selCarga(this, 20)">
+          <div class="carga-icon">📦</div>
+          <div class="carga-name">Mediana</div>
+          <div class="carga-price">15–45 lbs • +L.20</div>
+        </div>
+        <div class="carga-opt" onclick="selCarga(this, 40)">
+          <div class="carga-icon">🏋️</div>
+          <div class="carga-name">Pesada</div>
+          <div class="carga-price">45–90 lbs • +L.40</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PANEL: MOTO TAXI -->
+    <div id="panel-mototaxi" class="panel">
+      <div class="input-wrap">
+        <label>Número de pasajeras</label>
+        <select id="mt-pasajeras">
+          <option value="1">1 pasajera</option>
+          <option value="2">2 pasajeras (+L.30)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PANEL: TRÁMITES -->
+    <div id="panel-tramites" class="panel">
+      <div class="grid-2">
+        <div class="input-wrap">
+          <label>Nº de trámites</label>
+          <input type="number" id="tr-cantidad" value="1" min="1" max="10" placeholder="1">
+        </div>
+        <div class="input-wrap">
+          <label>Tiempo est. (h)</label>
+          <input type="number" id="tr-tiempo" value="1" min="0.5" max="8" step="0.5" placeholder="1">
+        </div>
+      </div>
+      <div class="input-wrap">
+        <label>Tipo de gestión</label>
+        <select id="tr-tipo">
+          <option value="0">🏦 Banco / Pago de servicios</option>
+          <option value="15">📄 Copias / Documentos legales (+L.15)</option>
+          <option value="25">🏢 Diligencia institucional (+L.25)</option>
+          <option value="40">🚗 Gestión vehicular / RENAVIH (+L.40)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- EXTRAS COMUNES -->
+    <div class="sec-label" style="margin-top:14px; margin-bottom:10px;">Extras</div>
+    <div class="extras-grid">
+      <label class="extra-opt" onclick="toggleExtra(this)">
+        <input type="checkbox" id="ext-lluvia">
+        <span class="extra-check">✓</span>
+        🌧️ Lluvia (+L.20)
+      </label>
+      <label class="extra-opt" onclick="toggleExtra(this)">
+        <input type="checkbox" id="ext-noche">
+        <span class="extra-check">✓</span>
+        🌙 Nocturno (+L.20)
+      </label>
+      <label class="extra-opt" onclick="toggleExtra(this)">
+        <input type="checkbox" id="ext-feriado">
+        <span class="extra-check">✓</span>
+        🗓️ Feriado (+L.25)
+      </label>
+      <label class="extra-opt" onclick="toggleExtra(this)">
+        <input type="checkbox" id="ext-urgente">
+        <span class="extra-check">✓</span>
+        ⚡ Urgente (+L.15)
+      </label>
+    </div>
+
+    <!-- INDICACIONES -->
+    <div class="input-wrap">
+      <label>Indicaciones especiales</label>
+      <textarea id="indicaciones" placeholder="Ej: Casa portón azul, 2da entrada a mano derecha. Pedir por María. QR de pago adjunto..."></textarea>
+    </div>
+
+    <!-- TELÉFONO CLIENTE -->
+    <div class="input-wrap">
+      <label>Tu WhatsApp (para confirmación)</label>
+      <div class="phone-wrap">
+        <span class="phone-prefix">🇭🇳 +504</span>
+        <input type="tel" id="tel-cliente" placeholder="9988-7766" maxlength="9" inputmode="numeric">
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="cotizar()">
+      VER COTIZACIÓN →
+    </button>
+  </div>
+
+  <!-- RESULTADO: TICKET -->
+  <div id="result-card">
+    <div class="ticket-header">
+      <div class="ticket-label">Cotización · Delivery SOS</div>
+      <div class="ticket-total" id="res-total">L. 0</div>
+      <div class="ticket-range" id="res-range"></div>
+    </div>
+
+    <hr class="ticket-divider">
+
+    <div class="ticket-lines" id="ticket-lines"></div>
+
+    <hr class="ticket-divider">
+
+    <div style="font-size:0.72em; color:rgba(255,255,255,0.4); text-align:center; font-weight:700;">
+      ⚠️ Precio referencial · Puede variar según tráfico real
+    </div>
+  </div>
+
+  <!-- ACCIONES: CONFIRMAR -->
+  <div class="confirm-section" id="confirm-section">
+    <button class="btn-confirm" onclick="confirmarPedido()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.088.542 4.05 1.478 5.762L0 24l6.406-1.638A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.73.978.997-3.648-.236-.374A9.818 9.818 0 1112 21.818z"/></svg>
+      ¡SÍ, QUIERO ESTE SERVICIO!
+    </button>
+    <button class="btn-recalc" onclick="recalcular()">← Modificar cotización</button>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    Tecnología libre: <a href="https://leafletjs.com" target="_blank">Leaflet.js</a> (BSD-2) · 
+    <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> (ODbL)<br>
+    © 2026 Delivery SOS · San Pedro Sula, HN · <a href="https://wa.me/50487371300" target="_blank">+504 8737-1300</a>
+  </div>
+
+</div>
+
+<!-- SPINNER -->
+<div class="spinner-overlay" id="spinner">
+  <div class="spinner"></div>
+  <div class="spinner-txt">Calculando ruta...</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- SCRIPTS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script>
+/* ============================================================
+   DELIVERY SOS — COTÍZAME v1.0
+   Licencias: Leaflet (BSD-2), OSM (ODbL), Nunito (SIL OFL)
+   Desarrollado para uso comercial en SPS, Honduras.
+   ============================================================ */
+
+// ── CONSTANTES DE NEGOCIO ───────────────────────────────────
+const WA_NUM = "50487371300";
+
+// Tarifas por rango de km (competitivo SPS, 2026)
+const TARIFA_MENSAJERIA = {
+  base:     55,   // tarifa mínima (1ª parada)
+  kmRetiro: 6,    // L. por km de retiro (desde mi posición al comercio)
+  rangos: [       // km de entrega → tarifa escalonada
+    { hasta: 3,  precio: 55  },
+    { hasta: 6,  precio: 75  },
+    { hasta: 10, precio: 100 },
+    { hasta: 15, precio: 130 },
+    { hasta: 999,precio: 130, extra: 12 } // +L.12 por km adicional sobre 15
+  ],
+  parada: 20      // L. por parada intermedia adicional
+};
+
+const TARIFA_MOTOTAXI = {
+  base:   60,
+  kmRate: 9,      // L. por km
+  pasajera2: 30   // recargo 2ª pasajera
+};
+
+const TARIFA_TRAMITES = {
+  base:     80,
+  horaTrab: 60,   // L. por hora de gestión
+  kmRate:   7
+};
+
+// ── VARIABLES DE ESTADO ─────────────────────────────────────
+let map, geocoder;
+let markers    = []; // [{latlng, type: 'origin'|'stop'|'dest', label}]
+let coordsYo   = null;
+let markerYo   = null;
+let routeLines = [];
+let servicioActivo = 'mensajeria';
+let cargaValor = 0;
+let cotizacionActual = null;
+
+// ── INIT ────────────────────────────────────────────────────
+window.onload = function () {
+  initMap();
+  renderStops();
+};
+
+function initMap() {
+  map = L.map('map').setView([15.5042, -88.0250], 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
+  }).addTo(map);
+
+  // Geocoder de búsqueda de direcciones (MIT)
+  geocoder = L.Control.geocoder({
+    defaultMarkGeocode: false,
+    placeholder: 'Buscar colonia o negocio en SPS...',
+    suggestMinLength: 3,
+    geocoder: L.Control.Geocoder.nominatim({
+      geocodingQueryParams: {
+        viewbox: '-88.15,15.40,-87.90,15.62',
+        bounded: 1
+      }
+    })
+  }).on('markgeocode', function (e) {
+    map.setView(e.geocode.center, 16);
+    colocarPin(e.geocode.center, e.geocode.name || 'Punto buscado');
+  }).addTo(map);
+
+  map.on('click', function (e) {
+    colocarPin(e.latlng, null);
+  });
+}
+
+// ── GESTIÓN DE PINES ────────────────────────────────────────
+function colocarPin(latlng, label) {
+  if (markers.length === 0) {
+    // Primer pin = ORIGEN
+    addMarker(latlng, 'origin', label || 'Origen (Comercio/Recogida)');
+  } else if (markers.length === 1) {
+    // Segundo pin = DESTINO inicial (puede agregarse paradas antes de este)
+    addMarker(latlng, 'dest', label || 'Destino');
+  } else {
+    // Mover el destino al nuevo punto
+    const last = markers[markers.length - 1];
+    if (last.type === 'dest') {
+      map.removeLayer(last.leafletMarker);
+      markers.pop();
+      addMarker(latlng, 'dest', label || 'Destino');
+    } else {
+      addMarker(latlng, 'dest', label || 'Destino');
+    }
+  }
+  updateRoute();
+  renderStops();
+}
+
+function addMarker(latlng, type, label) {
+  const icons = { origin: '📍', stop: '🔵', dest: '🏁' };
+  const colors = { origin: '#0ea5e9', stop: '#f97316', dest: '#16a34a' };
+
+  const icon = L.divIcon({
+    className: '',
+    html: `<div style="
+      font-size:28px; line-height:1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+      cursor:pointer;
+    ">${icons[type]}</div>`,
+    iconAnchor: [14, 28]
+  });
+
+  const m = L.marker(latlng, { draggable: true, icon }).addTo(map);
+  m.bindPopup(`<b>${label || (type === 'origin' ? 'Origen' : type === 'dest' ? 'Destino' : 'Parada')}</b>`);
+
+  const obj = { latlng, type, label: label || '', leafletMarker: m };
+  markers.push(obj);
+
+  m.on('dragend', function (e) {
+    obj.latlng = e.target.getLatLng();
+    updateRoute();
+  });
+
+  updateDistDisplay();
+  return obj;
+}
+
+function agregarParada() {
+  const destIdx = markers.findIndex(m => m.type === 'dest');
+  if (destIdx === -1) {
+    showToast('Primero marca el destino en el mapa');
+    return;
+  }
+  // Convertir el destino actual en parada, y pedir nuevo destino
+  const dest = markers.splice(destIdx, 1)[0];
+  map.removeLayer(dest.leafletMarker);
+
+  // Crear nueva parada en la posición del destino anterior
+  addMarkerAtPosition(dest.latlng, 'stop', `Parada ${markers.filter(m=>m.type==='stop').length + 1}`);
+  showToast('Toca el mapa para marcar el nuevo destino final');
+  renderStops();
+}
+
+function addMarkerAtPosition(latlng, type, label) {
+  addMarker(latlng, type, label);
+}
+
+function renderStops() {
+  const list = document.getElementById('stops-list');
+  const typeIcon = { origin: '📍', stop: '🔵', dest: '🏁' };
+  const typeClass = { origin: 'origin', stop: 'stop', dest: 'dest' };
+  const typeName = { origin: 'Origen', stop: 'Parada', dest: 'Destino' };
+
+  list.innerHTML = '';
+
+  if (markers.length === 0) return;
+
+  markers.forEach((m, i) => {
+    const div = document.createElement('div');
+    div.className = 'stop-item';
+    div.innerHTML = `
+      <span class="stop-dot ${typeClass[m.type]}"></span>
+      <span class="stop-txt">${typeIcon[m.type]} ${m.label || typeName[m.type]}</span>
+      ${i > 0 ? `<button class="stop-rm" onclick="removerPin(${i})">✕</button>` : ''}
+    `;
+    list.appendChild(div);
+  });
+}
+
+function removerPin(idx) {
+  map.removeLayer(markers[idx].leafletMarker);
+  markers.splice(idx, 1);
+  updateRoute();
+  renderStops();
+  updateDistDisplay();
+}
+
+function resetMapa() {
+  markers.forEach(m => map.removeLayer(m.leafletMarker));
+  markers = [];
+  routeLines.forEach(l => map.removeLayer(l));
+  routeLines = [];
+  if (markerYo) { map.removeLayer(markerYo); markerYo = null; coordsYo = null; }
+  renderStops();
+  updateDistDisplay();
+  document.getElementById('map-hint').textContent = 'Toca el mapa para marcar 📍 Origen → 🏁 Destino';
+}
+
+function updateRoute() {
+  routeLines.forEach(l => map.removeLayer(l));
+  routeLines = [];
+
+  const pts = markers.map(m => m.latlng);
+  if (pts.length >= 2) {
+    for (let i = 0; i < pts.length - 1; i++) {
+      const line = L.polyline([pts[i], pts[i + 1]], {
+        color: '#0ea5e9',
+        weight: 4,
+        opacity: 0.7,
+        dashArray: '8 4'
+      }).addTo(map);
+      routeLines.push(line);
+    }
+    map.fitBounds(L.latLngBounds(pts), { padding: [30, 30] });
+  }
+  updateDistDisplay();
+}
+
+function getTotalDistance() {
+  let total = 0;
+  const pts = markers.map(m => m.latlng);
+  if (coordsYo && pts.length > 0) {
+    total += map.distance(coordsYo, pts[0]) / 1000;
+  }
+  for (let i = 0; i < pts.length - 1; i++) {
+    total += map.distance(pts[i], pts[i + 1]) / 1000;
+  }
+  return total * 1.22; // +22% corrección de calles (SPS)
+}
+
+function updateDistDisplay() {
+  const el = document.getElementById('dist-display');
+  const km = getTotalDistance();
+  if (markers.length >= 2) {
+    el.style.display = 'block';
+    document.getElementById('dist-km').textContent = km.toFixed(1) + ' km';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// ── GPS ──────────────────────────────────────────────────────
+function activarGPS() {
+  if (!navigator.geolocation) return showToast('GPS no disponible en este navegador');
+  showSpinner(true);
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      showSpinner(false);
+      coordsYo = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      map.setView([coordsYo.lat, coordsYo.lng], 16);
+      if (markerYo) map.removeLayer(markerYo);
+      markerYo = L.circleMarker([coordsYo.lat, coordsYo.lng], {
+        radius: 10, color: '#0ea5e9', fillColor: '#0ea5e9',
+        fillOpacity: 0.4, weight: 3
+      }).addTo(map).bindPopup('📍 Tu ubicación').openPopup();
+      showToast('✅ Ubicación detectada');
+      updateDistDisplay();
+    },
+    err => {
+      showSpinner(false);
+      showToast('⚠️ Activa el GPS de tu celular');
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+// ── SELECTOR DE SERVICIO ────────────────────────────────────
+function selectService(svc, el) {
+  servicioActivo = svc;
+  document.querySelectorAll('.svc-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + svc).classList.add('active');
+  // Ocultar result
+  ocultarResultado();
+}
+
+// ── EXTRAS ──────────────────────────────────────────────────
+function toggleExtra(el) {
+  el.classList.toggle('checked');
+  el.querySelector('input[type=checkbox]').checked = el.classList.contains('checked');
+}
+
+// ── CARGA ───────────────────────────────────────────────────
+function selCarga(el, val) {
+  document.querySelectorAll('.carga-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  cargaValor = val;
+}
+
+// ── COTIZADOR MATEMÁTICO ────────────────────────────────────
+function cotizar() {
+  if (markers.length < 2) {
+    showToast('⚠️ Marca al menos Origen y Destino en el mapa');
+    return;
+  }
+
+  const kmTotal = getTotalDistance();
+  const kmRetiro = coordsYo && markers.length > 0
+    ? (map.distance(coordsYo, markers[0].latlng) / 1000) * 1.22
+    : 0;
+  const kmEntrega = Math.max(0, kmTotal - kmRetiro);
+  const nParadas = markers.filter(m => m.type === 'stop').length;
+
+  const extras = {
+    lluvia:  document.getElementById('ext-lluvia').checked  ? 20 : 0,
+    noche:   document.getElementById('ext-noche').checked   ? 20 : 0,
+    feriado: document.getElementById('ext-feriado').checked ? 25 : 0,
+    urgente: document.getElementById('ext-urgente').checked ? 15 : 0,
+  };
+  const totalExtras = Object.values(extras).reduce((a, b) => a + b, 0);
+
+  let desglose = [];
+  let totalMin, totalMax;
+
+  if (servicioActivo === 'mensajeria') {
+    // Tarifa base por km de entrega
+    let tarifaEntrega = calcTarifaMensajeria(kmEntrega);
+    let tarifaRetiro  = Math.round(kmRetiro * TARIFA_MENSAJERIA.kmRetiro);
+    if (tarifaRetiro < 15 && kmRetiro > 0) tarifaRetiro = 15;
+    let tarifaParadas = nParadas * TARIFA_MENSAJERIA.parada;
+
+    let sub = tarifaEntrega + tarifaRetiro + tarifaParadas + cargaValor + totalExtras;
+    totalMin = Math.ceil(sub * 0.95);
+    totalMax = Math.ceil(sub * 1.1);
+
+    desglose = [
+      { icon:'🏁', name:`Entrega (${kmEntrega.toFixed(1)} km)`, val:`L. ${tarifaEntrega}` },
+      kmRetiro > 0 ? { icon:'📍', name:`Retiro (${kmRetiro.toFixed(1)} km)`, val:`L. ${tarifaRetiro}` } : null,
+      nParadas > 0 ? { icon:'🔵', name:`${nParadas} parada(s) extra`, val:`L. ${tarifaParadas}` } : null,
+      cargaValor > 0 ? { icon:'📦', name:'Recargo por carga', val:`L. ${cargaValor}`, highlight: true } : null,
+      extras.lluvia  ? { icon:'🌧️', name:'Lluvia', val:`L. ${extras.lluvia}` } : null,
+      extras.noche   ? { icon:'🌙', name:'Nocturno', val:`L. ${extras.noche}` } : null,
+      extras.feriado ? { icon:'🗓️', name:'Feriado', val:`L. ${extras.feriado}` } : null,
+      extras.urgente ? { icon:'⚡', name:'Urgente', val:`L. ${extras.urgente}`, highlight: true } : null,
+    ].filter(Boolean);
+
+  } else if (servicioActivo === 'mototaxi') {
+    const pasajeras = parseInt(document.getElementById('mt-pasajeras').value);
+    let base = TARIFA_MOTOTAXI.base + Math.round(kmEntrega * TARIFA_MOTOTAXI.kmRate);
+    let p2   = pasajeras === 2 ? TARIFA_MOTOTAXI.pasajera2 : 0;
+    let sub  = base + p2 + totalExtras;
+    totalMin = Math.ceil(sub * 0.95);
+    totalMax = Math.ceil(sub * 1.1);
+
+    desglose = [
+      { icon:'🛵', name:`Moto Taxi (${kmEntrega.toFixed(1)} km)`, val:`L. ${base}` },
+      p2 > 0 ? { icon:'👩', name:'2ª pasajera', val:`L. ${p2}` } : null,
+      extras.lluvia  ? { icon:'🌧️', name:'Lluvia', val:`L. ${extras.lluvia}` } : null,
+      extras.noche   ? { icon:'🌙', name:'Nocturno', val:`L. ${extras.noche}` } : null,
+      extras.feriado ? { icon:'🗓️', name:'Feriado', val:`L. ${extras.feriado}` } : null,
+      extras.urgente ? { icon:'⚡', name:'Urgente', val:`L. ${extras.urgente}`, highlight: true } : null,
+    ].filter(Boolean);
+
+  } else { // tramites
+    const cantidad = parseInt(document.getElementById('tr-cantidad').value) || 1;
+    const tiempo   = parseFloat(document.getElementById('tr-tiempo').value) || 1;
+    const tipoval  = parseInt(document.getElementById('tr-tipo').value);
+
+    let baseDist   = Math.round(kmEntrega * TARIFA_TRAMITES.kmRate);
+    let baseTiempo = Math.round(tiempo * TARIFA_TRAMITES.horaTrab);
+    let baseBase   = TARIFA_TRAMITES.base;
+    let multitr    = cantidad > 1 ? (cantidad - 1) * 30 : 0;
+
+    let sub = baseBase + baseDist + baseTiempo + tipoval + multitr + totalExtras;
+    totalMin = Math.ceil(sub * 0.95);
+    totalMax = Math.ceil(sub * 1.1);
+
+    desglose = [
+      { icon:'📋', name:'Base gestión', val:`L. ${baseBase}` },
+      { icon:'🗺️', name:`Desplazamiento (${kmEntrega.toFixed(1)} km)`, val:`L. ${baseDist}` },
+      { icon:'⏱️', name:`Tiempo (${tiempo}h)`, val:`L. ${baseTiempo}` },
+      tipoval > 0 ? { icon:'🏢', name:'Tipo de trámite', val:`+L. ${tipoval}`, highlight: true } : null,
+      multitr > 0 ? { icon:'📁', name:`${cantidad} trámites`, val:`+L. ${multitr}` } : null,
+      extras.lluvia  ? { icon:'🌧️', name:'Lluvia', val:`L. ${extras.lluvia}` } : null,
+      extras.noche   ? { icon:'🌙', name:'Nocturno', val:`L. ${extras.noche}` } : null,
+      extras.feriado ? { icon:'🗓️', name:'Feriado', val:`L. ${extras.feriado}` } : null,
+      extras.urgente ? { icon:'⚡', name:'Urgente', val:`L. ${extras.urgente}`, highlight: true } : null,
+    ].filter(Boolean);
+  }
+
+  cotizacionActual = {
+    servicio: servicioActivo,
+    kmTotal, totalMin, totalMax, desglose,
+    indicaciones: document.getElementById('indicaciones').value,
+    tel: document.getElementById('tel-cliente').value,
+    markers: markers.map(m => ({ type: m.type, label: m.label, lat: m.latlng.lat, lng: m.latlng.lng }))
+  };
+
+  mostrarResultado(cotizacionActual);
+}
+
+function calcTarifaMensajeria(km) {
+  const r = TARIFA_MENSAJERIA.rangos;
+  for (let i = 0; i < r.length; i++) {
+    if (km <= r[i].hasta) {
+      if (r[i].extra && i === r.length - 1) {
+        return r[i - 1].precio + Math.round((km - r[i - 1].hasta) * r[i].extra);
+      }
+      return r[i].precio;
+    }
+  }
+  return r[r.length - 2].precio + Math.round((km - r[r.length - 2].hasta) * r[r.length - 1].extra);
+}
+
+// ── UI RESULTADO ─────────────────────────────────────────────
+function mostrarResultado(c) {
+  const card = document.getElementById('result-card');
+  const conf = document.getElementById('confirm-section');
+
+  document.getElementById('res-total').textContent = `L. ${c.totalMin}–${c.totalMax}`;
+  document.getElementById('res-range').textContent = 'Precio estimado · sujeto a confirmación';
+
+  const lines = document.getElementById('ticket-lines');
+  lines.innerHTML = c.desglose.map(l => `
+    <div class="ticket-line">
+      <span class="tl-name">${l.icon} ${l.name}</span>
+      <span class="tl-val ${l.highlight ? 'highlight' : ''}">${l.val}</span>
+    </div>
+  `).join('');
+
+  card.style.display = 'block';
+  conf.style.display = 'block';
+
+  // Scroll suave al resultado
+  setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function ocultarResultado() {
+  document.getElementById('result-card').style.display = 'none';
+  document.getElementById('confirm-section').style.display = 'none';
+  cotizacionActual = null;
+}
+
+function recalcular() {
+  ocultarResultado();
+  document.querySelector('.card:nth-child(3)').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── CONFIRMAR → WHATSAPP ────────────────────────────────────
+function confirmarPedido() {
+  if (!cotizacionActual) return;
+  const c = cotizacionActual;
+
+  const svcNombres = {
+    mensajeria: '📦 Mensajería / Envío',
+    mototaxi:   '🛵 Moto Taxi (Servicio Mujer)',
+    tramites:   '📋 Trámites y Gestiones'
+  };
+
+  let puntos = c.markers.map((m, i) => {
+    const icons = { origin: '📍', stop: '🔵', dest: '🏁' };
+    const label = m.label || (m.type === 'origin' ? 'Origen' : m.type === 'dest' ? 'Destino' : 'Parada');
+    const link = `https://maps.google.com/?q=${m.lat.toFixed(6)},${m.lng.toFixed(6)}`;
+    return `${icons[m.type]} *${label}:* ${link}`;
+  }).join('\n');
+
+  let desgloseTxt = c.desglose.map(l => `  • ${l.icon} ${l.name}: ${l.val}`).join('\n');
+
+  const msg =
+`🚀 *NUEVA SOLICITUD — DELIVERY SOS*
+================================
+🛍️ *Servicio:* ${svcNombres[c.servicio]}
+📏 *Distancia est.:* ${c.kmTotal.toFixed(1)} km
+💰 *Precio cotizado:* L. ${c.totalMin}–${c.totalMax}
+
+📍 *RUTA:*
+${puntos}
+
+📋 *DESGLOSE:*
+${desgloseTxt}
+
+📝 *Indicaciones:*
+${c.indicaciones || '(Sin indicaciones adicionales)'}
+
+📱 *WhatsApp cliente:* +504 ${c.tel || 'No indicado'}
+================================
+_Cotizado vía Cotízame · Delivery SOS SPS_`;
+
+  const tel = c.tel && c.tel.length >= 8
+    ? `50${c.tel.replace(/\D/g, '').slice(-8)}`
+    : WA_NUM;
+
+  // Abrir WhatsApp del negocio con el resumen
+  window.open(`https://api.whatsapp.com/send?phone=${WA_NUM}&text=${encodeURIComponent(msg)}`, '_blank');
+
+  showToast('✅ ¡Abriendo WhatsApp!');
+}
+
+// ── HELPERS UI ──────────────────────────────────────────────
+function showSpinner(s) {
+  document.getElementById('spinner').classList.toggle('active', s);
+}
+
+function showToast(msg, dur = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+</script>
+</body>
+</html>
