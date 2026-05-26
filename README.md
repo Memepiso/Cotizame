@@ -1,73 +1,134 @@
-¡Claro! Aquí va el README perfecto para tu proyecto:
-
----
-
 # ⚡ Delivery S.O.S™ 🏍️ — Cotízame
-
-**Cotizador web profesional para servicios de mensajería y movilidad en San Pedro Sula, Honduras.**
-
-Desarrollado como aplicación web de archivo único (HTML/CSS/JS), funciona directamente desde el navegador móvil sin necesidad de instalar nada.
+### 🎁 Herramienta gratuita y libre para deliveries independientes de Honduras
 
 ---
 
-## 🚀 ¿Qué hace?
+## ¿Qué es esto?
 
-Permite a los clientes cotizar servicios de forma transparente antes de confirmar, y envía automáticamente el resumen completo al WhatsApp del negocio con todos los detalles de la solicitud.
+Un cotizador web profesional que podés usar **gratis** desde tu celular. Tu cliente abre un enlace, selecciona el servicio, marca origen y destino en el mapa, ve el precio desglosado y al confirmar **te llega todo directo a tu WhatsApp** con la ubicación, indicaciones y detalles del pedido.
 
----
-
-## 🛍️ Servicios disponibles
-
-- **📦 Mensajería** — Envíos con soporte para múltiples paradas, tipo de carga (liviana, mediana, pesada) y cálculo por rangos de distancia
-- **🛵 Moto Taxi Mujer** — Servicio exclusivo para pasajeras con paradas opcionales
-- **📋 Trámites y Gestiones** — Diligencias en bancos, IHSS, SAR, RENAVIH, notarías y universidades, calculadas por tiempo y distancia
+Sin apps. Sin pagos. Sin instalaciones. Solo un enlace.
 
 ---
 
-## ⚙️ Características técnicas
+## 🚀 Cómo usarlo en 10 minutos
 
-- Mapa interactivo con buscador de direcciones por colonia o negocio
-- Geolocalización GPS real del cliente
-- Pines arrastrables para precisión exacta
-- Paradas intermedias ilimitadas con indicaciones individuales
-- Toggle de ida y vuelta con recargo automático
-- Extras: lluvia, nocturno, feriado, urgente, zona de riesgo, fuera de SPS
-- Cotización con rango de precio transparente
-- Confirmación directa por WhatsApp Business con links de Google Maps
+### Opción A — Usar este mismo repositorio (la más fácil)
+
+1. Creá una cuenta gratis en **github.com**
+2. Entrá a este repositorio y tocá **Fork** (arriba a la derecha)
+3. Activá GitHub Pages: Settings → Pages → Branch: main → Save
+4. Tu enlace queda: `https://tu-usuario.github.io/cotizame`
+5. Editá el archivo `index.html`, buscá esta línea:
+
+```
+const WA_NEGOCIO = "50487371300";
+```
+6. Cambiá ese número por el tuyo (con código de país, sin espacios ni guiones):
+```
+const WA_NEGOCIO = "50498765432";
+```
+7. Guardá con Commit changes. ¡Listo!
 
 ---
 
-## 💰 Tarifas
+### Opción B — Crear tu propio repositorio desde cero
 
-Calibradas y competitivas vs. el mercado de San Pedro Sula 2026 (PedidosYa, InDriver, mensajeros independientes).
+1. Descargá el archivo `index.html` de este repositorio
+2. Creá un repositorio nuevo en GitHub llamado `cotizame`
+3. Subí el archivo y renombralo `index.html`
+4. Activá GitHub Pages en Settings → Pages
+5. Cambiá el número de WhatsApp como se indica arriba
 
 ---
 
-## 🗺️ Tecnologías de código abierto
+### Opción C — Netlify (sin cuenta de GitHub)
+
+1. Entrá a **netlify.com/drop**
+2. Descargá y modificá el `index.html` con tu número
+3. Arrastrá el archivo a Netlify Drop
+4. Te genera un enlace instantáneo gratis
+
+---
+
+## ✏️ Personalizaciones básicas
+
+Abrí el archivo `index.html` y buscá estas líneas para personalizarlo:
+
+```javascript
+// Tu número de WhatsApp (con 504, sin espacios)
+const WA_NEGOCIO = "50487371300";
+
+// Tu nombre y marca
+const LOGO_NAME = "⚡Delivery S.O.S™ 🏍️";
+```
+
+Para cambiar tu logo, reemplazá la imagen en la etiqueta:
+```html
+<img src="TU_LOGO_AQUI" alt="Tu nombre">
+```
+
+---
+
+## 💰 ¿Puedo cambiar los precios?
+
+Sí. Buscá en el código la sección `// TARIFAS` y ajustá los valores según tu zona y competencia:
+
+```javascript
+const T = {
+  mensajeria: {
+    rangos: [
+      {hasta:3,  base:55},  // 0 a 3 km → L.55
+      {hasta:6,  base:75},  // 3 a 6 km → L.75
+      ...
+    ]
+  }
+}
+```
+
+---
+
+## 🛍️ Servicios incluidos
+
+- 📦 Mensajería con paradas múltiples y tipos de carga
+- 🛵 Moto Taxi exclusivo para mujeres
+- 📋 Trámites y gestiones (bancos, IHSS, SAR, RENAVIH, notarías)
+- Extras: lluvia, nocturno, feriado, urgente, zona de riesgo, fuera de ciudad
+
+---
+
+## 🗺️ Tecnologías libres utilizadas
 
 | Tecnología | Licencia | Uso |
 |---|---|---|
-| Leaflet.js | BSD-2-Clause | Mapas interactivos |
-| OpenStreetMap | ODbL | Datos cartográficos |
-| Nominatim | ODbL | Geocodificación de direcciones |
-| Google Fonts (Nunito) | SIL OFL 1.1 | Tipografía |
+| Leaflet.js | BSD-2-Clause | Mapas |
+| OpenStreetMap | ODbL | Datos del mapa |
+| Nominatim | ODbL | Búsqueda de direcciones |
+| Google Fonts | SIL OFL 1.1 | Tipografía |
+
+100% código abierto. Libre para uso comercial personal.
 
 ---
 
-## 📱 Uso
+## ❓ Preguntas frecuentes
 
-Abre el enlace desde tu navegador móvil:
-**`https://tu-usuario.github.io/cotizame`**
+**¿Funciona sin internet?**
+No, necesita conexión para cargar el mapa.
 
-en mi caso:
+**¿El cliente puede pagar desde aquí?**
+No, solo cotiza. El pago se coordina por WhatsApp.
 
-https://memepiso.github.io/Cotizame/
+**¿Puedo usarlo en Tegucigalpa o Choloma?**
+Sí, el mapa funciona en toda Honduras. Solo ajustá las tarifas a tu zona.
 
-No requiere instalación ni cuenta.
+**¿Necesito saber programar?**
+Solo para cambiar el número y el nombre. Son dos líneas de texto, nada más.
 
 ---
 
-## 📞 Contacto
+## 📞 Proyecto original
 
 **⚡Delivery S.O.S™ 🏍️** · San Pedro Sula, Honduras
 WhatsApp: [+504 8737-1300](https://wa.me/50487371300)
+
+*Si te ayudó esta herramienta, compartila con otros deliveries 🤝*
