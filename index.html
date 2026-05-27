@@ -1,182 +1,167 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>⚡ Delivery S.O.S™ — Cotízame</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --blue:#0ea5e9; --blue-d:#0284c7; --orange:#f97316; --orange-d:#ea580c;
-      --dark:#0f172a; --mid:#1e293b; --muted:#64748b; --light:#f1f5f9;
-      --white:#fff; --green:#16a34a; --red:#ef4444; --radius:18px;
-      --shadow:0 4px 24px rgba(15,23,42,0.12);
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html{scroll-behavior:smooth}
-    body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);min-height:100dvh;overflow-x:hidden}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cotízame - Repartos</title>
 
-    /* HERO */
-    .hero{background:linear-gradient(135deg,var(--dark) 0%,var(--mid) 60%,#1a3a5c 100%);padding:24px 20px 72px;text-align:center;position:relative;overflow:hidden}
-    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 20%,rgba(14,165,233,0.18) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(249,115,22,0.15) 0%,transparent 50%);pointer-events:none}
-    .hero-logo{width:88px;height:88px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 0 0 4px rgba(14,165,233,0.35),0 8px 28px rgba(0,0,0,0.35);overflow:hidden;position:relative;z-index:1}
-    .hero-logo img{width:85%;height:85%;object-fit:contain}
-    .hero-brand{font-size:0.68em;font-weight:900;letter-spacing:3px;color:var(--blue);text-transform:uppercase;margin-bottom:3px;position:relative;z-index:1}
-    .hero-title{font-size:1.6em;font-weight:900;color:var(--white);line-height:1.15;position:relative;z-index:1}
-    .hero-title span{color:var(--orange)}
-    .hero-sub{font-size:0.78em;color:rgba(255,255,255,0.5);margin-top:5px;font-weight:700;position:relative;z-index:1}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
-    /* WRAP */
-    .main-wrap{max-width:480px;margin:-48px auto 30px;padding:0 12px;position:relative;z-index:10}
-    .card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:12px;border:1px solid rgba(14,165,233,0.07);animation:fadeUp 0.35s ease both}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-
-    /* SECTION LABEL */
-    .sec-label{font-size:0.66em;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:6px}
-    .sec-label::after{content:'';flex:1;height:1px;background:var(--light)}
-
-    /* SERVICES */
-    .services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    .svc-btn{background:var(--light);border:2px solid transparent;border-radius:14px;padding:13px 5px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;-webkit-tap-highlight-color:transparent}
-    .svc-btn:active{transform:scale(0.95)}
-    .svc-btn.active{background:linear-gradient(135deg,rgba(14,165,233,0.1),rgba(249,115,22,0.08));border-color:var(--blue)}
-    .svc-icon{font-size:1.8em;margin-bottom:5px}
-    .svc-name{font-size:0.7em;font-weight:800;color:var(--mid);line-height:1.2}
-    .svc-price{font-size:0.62em;color:var(--muted);margin-top:2px;font-weight:700}
-    .svc-badge{position:absolute;top:-5px;right:-5px;background:var(--orange);color:white;font-size:0.55em;font-weight:900;padding:2px 5px;border-radius:20px}
-
-    /* LOCATION BLOCK */
-    .loc-block{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:10px;position:relative}
-    .loc-block.origin-block{border-left:4px solid var(--blue)}
-    .loc-block.stop-block{border-left:4px solid var(--orange)}
-    .loc-block.dest-block{border-left:4px solid var(--green)}
-    .loc-type-label{font-size:0.65em;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
-    .loc-type-label.origin-lbl{color:var(--blue)}
-    .loc-type-label.stop-lbl{color:var(--orange)}
-    .loc-type-label.dest-lbl{color:var(--green)}
-    .loc-search-wrap{position:relative;margin-bottom:8px}
-    .loc-search-wrap input{width:100%;padding:11px 38px 11px 12px;border:2px solid #e2e8f0;border-radius:11px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--dark);background:white;outline:none;transition:border-color 0.2s}
-    .loc-search-wrap input:focus{border-color:var(--blue)}
-    .loc-search-wrap .search-icon{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:1em;opacity:0.5;pointer-events:none}
-    .loc-results{position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid #e2e8f0;border-radius:11px;z-index:500;max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,0.1);display:none}
-    .loc-result-item{padding:10px 12px;font-size:0.82em;font-weight:700;color:var(--mid);cursor:pointer;border-bottom:1px solid #f1f5f9}
-    .loc-result-item:last-child{border:none}
-    .loc-result-item:active{background:#f1f5f9}
-    .loc-notes input{border:2px solid #e2e8f0;border-radius:10px;width:100%;padding:9px 12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;color:var(--mid);background:#f8fafc;outline:none}
-    .loc-notes input:focus{border-color:var(--blue);background:white}
-    .loc-pin-set{display:flex;align-items:center;gap:5px;font-size:0.68em;font-weight:800;color:var(--muted);margin-top:6px}
-    .loc-pin-set.pinned{color:var(--green)}
-    .loc-rm-btn{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--red);font-size:1em;cursor:pointer;padding:2px 5px;opacity:0.7}
-
-    /* IDA Y VUELTA */
-    .ida-vuelta-wrap{background:linear-gradient(135deg,rgba(249,115,22,0.08),rgba(14,165,233,0.06));border:1.5px solid rgba(249,115,22,0.3);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-    .iv-check{width:22px;height:22px;border-radius:7px;border:2px solid #cbd5e1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:0.2s;font-size:0.8em}
-    .iv-check.on{background:var(--orange);border-color:var(--orange);color:white}
-    .iv-txt{flex:1;font-size:0.8em;font-weight:800;color:var(--mid)}
-    .iv-price{font-size:0.72em;font-weight:900;color:var(--orange)}
-
-    /* MAP */
-    #map{height:220px;border-radius:13px;border:2px solid #e2e8f0;z-index:1;margin-bottom:8px;overflow:hidden}
-    .map-hint{text-align:center;font-size:0.7em;color:var(--muted);font-weight:700;padding:7px 10px;background:#f8fafc;border-radius:9px;margin-bottom:8px}
-    .map-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-    .btn-gps{background:linear-gradient(135deg,var(--blue),var(--blue-d));color:white;border:none;padding:11px;border-radius:11px;font-weight:800;font-size:0.76em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Nunito',sans-serif}
-    .btn-reset-map{background:#fee2e2;color:var(--red);border:none;padding:11px;border-radius:11px;font-weight:800;font-size:0.76em;cursor:pointer;font-family:'Nunito',sans-serif}
-    .btn-add-stop{width:100%;background:none;border:2px dashed #cbd5e1;border-radius:12px;padding:10px;color:var(--blue);font-weight:800;font-size:0.78em;cursor:pointer;font-family:'Nunito',sans-serif;transition:0.2s;margin-top:4px}
-    .btn-add-stop:active{border-color:var(--blue);background:rgba(14,165,233,0.04)}
-
-    /* DIST DISPLAY */
-    .dist-display{display:none;text-align:center;padding:10px;background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(249,115,22,0.06));border-radius:12px;margin-top:8px}
-    .dist-display span.lbl{font-size:0.68em;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-    .dist-display span.km{font-size:1.9em;font-weight:900;color:var(--dark);display:block}
-
-    /* INPUTS GENERALES */
-    .input-wrap{margin-bottom:10px}
-    .input-wrap label{display:block;font-size:0.66em;font-weight:900;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
-    input[type=text],input[type=number],input[type=tel],textarea,select{width:100%;padding:12px 13px;border:2px solid #e2e8f0;border-radius:12px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;color:var(--dark);background:#f8fafc;outline:none;transition:border-color 0.2s,background 0.2s}
-    input:focus,textarea:focus,select:focus{border-color:var(--blue);background:white}
-    textarea{resize:none;min-height:65px}
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-    /* CARGA */
-    .carga-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-    .carga-opt{background:var(--light);border:2px solid transparent;border-radius:12px;padding:11px 5px;text-align:center;cursor:pointer;transition:0.2s;-webkit-tap-highlight-color:transparent}
-    .carga-opt.sel{background:rgba(14,165,233,0.08);border-color:var(--blue)}
-    .carga-icon{font-size:1.5em;margin-bottom:3px}
-    .carga-name{font-size:0.69em;font-weight:800;color:var(--mid)}
-    .carga-price{font-size:0.62em;color:var(--muted);margin-top:1px}
-
-    /* EXTRAS */
-    .extras-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-    .extra-opt{background:#f8fafc;border:2px solid #e2e8f0;border-radius:12px;padding:11px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.76em;font-weight:800;color:var(--mid);transition:0.2s;-webkit-tap-highlight-color:transparent;user-select:none}
-    .extra-opt.on{background:linear-gradient(135deg,rgba(14,165,233,0.1),rgba(249,115,22,0.06));border-color:var(--blue);color:var(--blue-d)}
-    .extra-chk{width:19px;height:19px;border-radius:6px;border:2px solid #cbd5e1;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.75em;transition:0.2s}
-    .extra-opt.on .extra-chk{background:var(--blue);border-color:var(--blue);color:white}
-
-    /* PANEL */
-    .panel{display:none}
-    .panel.active{display:block}
-
-    /* TRAMITES SELECT */
-    .tramite-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-    .tr-opt{background:#f8fafc;border:2px solid #e2e8f0;border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;transition:0.2s;-webkit-tap-highlight-color:transparent}
-    .tr-opt.sel{background:rgba(14,165,233,0.08);border-color:var(--blue)}
-    .tr-icon{font-size:1.5em;margin-bottom:3px}
-    .tr-name{font-size:0.68em;font-weight:800;color:var(--mid);line-height:1.2}
-    .tr-extra{font-size:0.6em;color:var(--muted)}
-
-    /* BTN CALC */
-    .btn-calc{width:100%;background:linear-gradient(135deg,var(--dark),var(--mid));color:white;border:none;padding:17px;border-radius:15px;font-family:'Nunito',sans-serif;font-size:1.05em;font-weight:900;letter-spacing:0.5px;cursor:pointer;transition:transform 0.15s;box-shadow:0 4px 16px rgba(15,23,42,0.25)}
-    .btn-calc:active{transform:scale(0.98)}
-
-    /* RESULT */
-    #result-card{display:none;background:linear-gradient(135deg,var(--dark) 0%,#1a3a5c 100%);border-radius:var(--radius);padding:22px;margin-bottom:12px;position:relative;overflow:hidden;animation:fadeUp 0.35s ease both}
-    #result-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 10%,rgba(14,165,233,0.25) 0%,transparent 55%),radial-gradient(ellipse at 10% 90%,rgba(249,115,22,0.2) 0%,transparent 50%);pointer-events:none}
-    .res-header{text-align:center;margin-bottom:16px;position:relative}
-    .res-lbl{font-size:0.65em;font-weight:900;letter-spacing:3px;color:var(--blue);text-transform:uppercase}
-    .res-total{font-size:3em;font-weight:900;color:white;line-height:1;margin:4px 0 2px}
-    .res-sub{font-size:0.75em;color:rgba(255,255,255,0.45);font-weight:700}
-    .res-divider{border:none;border-top:1px dashed rgba(255,255,255,0.15);margin:14px 0}
-    .res-lines{margin-bottom:12px}
-    .res-line{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.07);font-size:0.81em}
-    .res-line:last-child{border:none}
-    .rl-name{color:rgba(255,255,255,0.6);font-weight:700;display:flex;align-items:center;gap:5px}
-    .rl-val{color:white;font-weight:900}
-    .rl-val.gold{color:#fbbf24}
-    .res-note{font-size:0.68em;color:rgba(255,255,255,0.35);text-align:center;font-weight:700}
-
-    /* CONFIRM */
-    .confirm-section{display:none;margin-bottom:12px;animation:fadeUp 0.35s ease 0.1s both}
-    .btn-confirm{width:100%;background:linear-gradient(135deg,var(--green),#15803d);color:white;border:none;padding:17px;border-radius:15px;font-family:'Nunito',sans-serif;font-size:1.08em;font-weight:900;cursor:pointer;box-shadow:0 4px 20px rgba(22,163,74,0.35);display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;transition:transform 0.15s}
-    .btn-confirm:active{transform:scale(0.98)}
-    .btn-recalc{width:100%;background:rgba(100,116,139,0.1);color:var(--muted);border:2px solid #e2e8f0;padding:11px;border-radius:12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:0.88em;cursor:pointer}
-
-    /* PHONE */
-    .phone-wrap{display:flex;gap:8px;align-items:center}
-    .phone-prefix{background:var(--light);border:2px solid #e2e8f0;border-radius:12px;padding:12px 11px;font-weight:800;font-size:0.88em;color:var(--mid);white-space:nowrap;flex-shrink:0}
-
-    /* SPINNER */
-    .spinner-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.65);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
-    .spinner-ov.on{display:flex}
-    .spinner{width:42px;height:42px;border:4px solid rgba(255,255,255,0.2);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .spinner-txt{color:white;font-weight:800;font-size:0.88em}
-
-    /* TOAST */
-    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--dark);color:white;padding:11px 22px;border-radius:28px;font-size:0.82em;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:9999;transition:transform 0.3s;white-space:nowrap}
-    .toast.show{transform:translateX(-50%) translateY(0)}
-
-    /* FOOTER */
-    .footer{text-align:center;padding:18px 14px 40px;font-size:0.68em;color:var(--muted);font-weight:700}
-    .footer a{color:var(--blue);text-decoration:none}
-
-    /* SUGERENCIAS GEOCODER */
-    .leaflet-control-geocoder{display:none!important}
-  </style>
+    <style>
+        :root { --primary: #2563eb; --success: #22c55e; --dark: #1e293b; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f1f5f9; color: var(--dark); }
+        #map { height: 300px; width: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .app-container { padding: 15px; max-width: 600px; margin: 0 auto; }
+        .card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .input-group { margin-bottom: 12px; position: relative; }
+        .input-group i { position: absolute; left: 12px; top: 15px; color: #64748b; }
+        input { width: 100%; padding: 12px 12px 12px 40px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-whatsapp { background: var(--success); color: white; display: none; }
+        .stop-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .btn-remove { background: #fee2e2; color: #ef4444; border: none; padding: 12px; border-radius: 8px; }
+        #result { display: none; border-top: 2px solid #f1f5f9; padding-top: 15px; margin-top: 15px; }
+        .price-tag { font-size: 24px; font-weight: 800; color: var(--primary); text-align: center; margin: 10px 0; }
+    </style>
 </head>
 <body>
 
-<div class="hero">
-  <div class="hero-logo">
-    <img src="data:image/png;base64,/9j/4QCARXhpZgAATU0AKgAAAAgABAEAAAQAAAABAAACBQEBAAQAAAABAAAB4wEyAAIAAAAUAAAAPodpAAQAAAABAAAAUgAAAAAyMDI2OjAzOjA5IDE4OjIxOjE5AAABkAMAAgAAABQAAABkAAAAADIwMjU6MTE6MTAgMTY6MjM6MTIA/+AAEEpGSUYAAQEAAAEAAQAA/+IB2ElDQ19QUk9GSUxFAAEBAAAByAAAAAAEMAAAbW50clJHQiBYWVogB+AAAQABAAAAAAAAYWNzcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAPbWAAEAAAAA0y0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJZGVzYwAAAPAAAAAkclhZWgAAARQAAAAUZ1hZWgAAASgAAAAUYlhZWgAAATwAAAAUd3RwdAAAAVAAAAAUclRSQwAAAWQAAAAoZ1RSQwAAAWQAAAAoYlRSQwAAAWQAAAAoY3BydAAAAYwAAAA8bWx1YwAAAAAAAAABAAAADGVuVVMAAAAIAAAAHABzAFIARwBCWFlaIAAAAAAAAG+iAAA49QAAA5BYWVogAAAAAAAAYpkAALeFAAAY2lhZWiAAAAAAAAAkoAAAD4QAALbPWFlaIAAAAAAAAPbWAAEAAAAA0y1wYXJhAAAAAAAEAAAAAmZmAADypwAADVkAABPQAAAKWwAAAAAAAAAAbWx1YwAAAAAAAAABAAAADGVuVVMAAAAgAAAAHABHAG8AbwBnAGwAZQAgAEkAbgBjAC4AIAAyADAAMQA2/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBUU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgB4wIFAwEiAAIRAQMRAf/EAB0AAQACAQUBAAAAAAAAAAAAAAABCAcCBAUGCQP/xABdEAABAwMBBQQGBQgEBg4JBQABAAIDBAURBgcSITFBCFFhgRMUInGRoSMyQlKxFWJygpTB0dIWM5LTGCRDorLhNDU2REVGU1VWY2SEwvAJFyUmVHN0g+IZdZWjw//EAB0BAQACAgMBAQAAAAAAAAAAAAABBwUGAwQIAgn/xABEEQABAgQDBAcFBgQGAgIDAAABAAIDBAURBiExEkFRcWGBkaGxwdEHExQi8BUjMkJS4RZi0vEzU1RygpIksghEorPC/9oADAMBAAIRAxEAPwD09RERQmERERFClEXyiJ1RFKIiIiJyRQilSmUREUZRFKKLoiIiIiIiIiIiIozhT1RERE6oiIiIiIhRERERERQmVKIiJlERERERSiIiIiFERQoU5RERECIiIowp70RSoIQqURRdRngmVJQlEUIpRERETkilOGUUKURERCihAUUKURMpzRCUUIiIilEQZRFKIU6IihERCiImEUZRSpRR0UooRERFCIiIpTyTyRQiKU5qAURLKU5oOKIiIiIieScERETyRFHIIilEQFERERERERERERERFClEREREREREREREREUdURSidFCIo5LUmERSiYREUJwTyRERERERRxQc1KYRSiIiKERERE4InRMoiIoyiKbIcopRERERFCIiZREUZUqERTnwUZ8EypRSo4qURFCJhEREKKCcKUSyjKjPgpzxUDgilPJauPcoUoiIiIoRERFCKM+ClQilM+ClRlSilR5KURFCIiIiIiIvpFGfBM5QFETPgp5qMqURERERERERFHLopyoRQnkmfBEBRFKKMqUREREUInVERFBPRMohKKUzlM+ClMoigKURFCIiIiISmVGUUpnwTPgnBOCKUz4IFKIiZwiBFChERFKhFGVKIig4TgpTCKU4IiIiIiIoREREUKeCIBwRFHDvUoiIiIiIiIiKUymURFCFR5qcJhFKImERSiIiIiIiIiZCIiKOCYClERERERERERERQiKU4IowiJwUphEREREUIiIihE80RETgo4d6nCIpTgiIihEREREREROGVBwmExxRSmQp80wmEUInRERSmUREREREUIiIiIiIiIeCZRRlEU5TKIihEREUphE5IiIiIilERERERERFClERERERERERERERCiIiIiIiIiIilEREREREREwiYRERERERERQnRMoiKERERERMIiIiIiIiZQIiZRERQidUUIpCYUoiIiJlQERTlERFCYRERSiIiIiIiKEUKVGAilFKIiIiJlERERERERERETCIiIiIiJxRFKIiIiIiIiJhERERMoERMoiIoRERERERERERFKIiFERERERERERERFCIhymURETKBEREQoiFMImERERESyIiIiIiIiJhMIiIijAUoiIhREsiIERE6dyIEREREREUFSozhEClMqAQUyiKUUKURERCiInmmVBRTZTzRRlAQUSyKVGUBCKVKL4VVZBQwSTTyshhjG8973BoaBzJJWFde9qrTmnHyU1mjk1BWN4b0B3IAfF55/qgrtS8rGmnbMFpP1xWKn6pJUtnvJyKGDp1PIanqWcScLaV14obZEZaysgpYx9uaQNHxKo/q3tK671K97IK+KzUxPsx0TPaA8XuyfhhY1rbxcLpKZa+snr5jzfUSuefmtngYbjOzjPDegZ+irKe9pEpCJbJwS/pJ2R5nwV+7ntx0LaSRNqSie4fZhf6Q/5uV12q7UmgaY4bXVM3jHSvx88KkTJuA+jA8RwX1E+TgloHuWVbhuWb+Jzj2ei1SJ7R6o8/dwmNHInzCucO1loUn69wA7/VT/Fb6j7T+gatwDrjPT+M1K8D5Aqku64tBAcQe5q+E0rogd5r8foqTh+SP5iOsei4m+0GtNNyxh/4n+peg1s2xaLvDwym1Jb3PIyGPmDHfB2F2ynrqerYHwTRysPJzHAg+a8yBKXu3nMJXK2fUt6sVQH2qurKB7eRp5nMHwBXTiYaYR91F7R6LMy3tKjA2mpYEcWkjuN/FelIwQipPpTtOa1sD2itlivUAGC2rbuv8nNx88rNmjO1TpjUD44LrHLYql2BvTneh/tjl5gLAzNFnJfPZ2hxGfdr3LfadjSj1AhvvPduO5+Xfm3vWbEXwoq+nuVMyopZ46mB4y2SJwc1w8COa+5WC0yW9AhwuE6phRkJlEspUZTITIRSpRMrhdR6xtGlIPS3OtjpQfqtccud7gOJ8l8Pe2GNp5sFyMhviODGC5O4ZrmkJwsH6h7RQlL4rFQZHIVFWcA+5o4/EhY2vuv9TX8uFVeZgw/5OD6NvyWuTOIJSDlD+c9GnatrlcMz0fOLZg6dewedlaW46ptFoBNbcqWmxzEkoB+C6vW7cdG0Ti03dsxH/Ixud+5VMrYZi8vc8yH7zzklbUGRpwQPILXYuKI5P3cMDnc+i22BguXteLFJ5WHqrWntDaQ3gGzVbvEU5wt7S7cdJ1eP8ckiB6yQuCqdTSHOMcui5GKZ45cPJcLcSze8Ds/dc0TCEiBYF3aPRW/oNe6eueBT3ekc48mukDT8CucinjmYHRvbI08QWkHKpDUzHqAT34XzotUXqzTb1vuVTSYPKOUgfDku/DxQR/iw+wrGxMF7QvAi9o8x6K8qnkqraY7Q+p7S5rLh6G7QDn6Ru5J/aHD5LMmktuGndTuZDLMbXVu4ejq8Na4+DuS2GVrUnNWAdsngcv2Wqz2HahIguczabxbn+/csi8UWlkjXtDmkOBGQQea1LPLWbIiZUZCIpUZTKFFKZUqFIRQiIiKETKIilE6KCQUz4Ilkz1RM8EyilSij4oiiylERERFHXKIospyo806KOaKQpyiJlEU5yoynNBxRE5pxCdU5+5EUKc8FB6DkpRSoHHKkcuaYwhIARFDiAMkrGu1fbnYtmFO6Gd3r13e3MVvhd7XgXn7I+fcF1Hb/ANoWPREc1i089lRqFzcSTfWZSDx739w6de5U5qa6ruVbLWV08lVVTOL5ZZTvOce8krb6TQnTQEeZyZuG8+gVT4oxoynOdJ0+zoo1dqG9A4nuG++i7rr/AGu6m2lVBN0rTFRZzHQ0+WQs7sj7R8TnyXT2SljcO4kDmBwS30lXdK6KioqeWqqpSGsihYXFxPgrP7Luyc1rYrhrOX0jjh7bbTu9n3SOH4D4rdJiZlKVCDX/ACjcBqfriqckqbVcTzJc27zvc45DmfIdQVftMaHv+taoU9mtVRWu5F7GYjb+k48B5lZy0n2OaypjEupLu2kzg+r0Ld9w8C48PgCrIl1k0LZBl1JZrXTtwMlsUbR/FYj1p2r9OWVzobJSzXycDhL/AFUI8yMn4LUn1aoVB2zJQ9kdGfaTkFZ8PC1AoEMRKxH2ncCbDqaPmP1kubsnZh0HZy0yW+W4yN+1VTOIPkMBdyoNmukbWR6vp62REcj6swn4kKpGpe1Bry9Pe2mqaW0QOzhlLFlwH6Ts/uWPa7XGqbrJ6Ss1Fcp3EdahwHwyvttFqEfOYjW6yf2XA/GWHpD5ZCTv07LW+p7QvRBtFaKdoa2CiiA6BjAF85LfaKg4dS0UoPQxsK85XXW4Pxv19U73yEqY7rdYzmK5VkZzw3JXD96+v4Zf/nd37rjPtKgnL4PL/cP6V6CXTZtpO9xuZV6et02eG8KdrXDzGCF0W8dlrRdwYfU2Vdpk44dBMXj4Pyqq2jaZrCynNNqO4s48nzF4+Bysiaf7VGsLWWtrm0l2iAwfTR7jz5t4fJfBo1SlheBFv1kdxyXK3F+HKibT0psnjsg94s7uXL6p7J19tzHTWipprtC0E+iP0UvwJwfisM6g0zdNMVJprnbqqglPJk8Rbn3E8/eFafSfaq01eDHDdqeezTuwC8+3Fk+I4j4LKU8On9oFn3JG0V7t0nLBbI3yI5H5rjbVZ+RdszjLjs79CuZ+F6FW2GJR44DuF7jrB+Yd/JUQ0dtR1J
+    <div id="map"></div>
+
+    <div class="app-container">
+        <div class="card">
+            <div class="input-group">
+                <i class="fas fa-map-marker-alt"></i>
+                <input type="text" id="origin" placeholder="Punto de origen (Tienda/Casa)">
+            </div>
+
+            <div id="stops-container"></div>
+
+            <button onclick="addStop()" style="background:none; border:none; color:var(--primary); font-size:13px; font-weight:600; padding:5px 0; cursor:pointer;">
+                <i class="fas fa-plus-circle"></i> Agregar parada intermedia
+            </button>
+
+            <div class="input-group" style="margin-top:10px;">
+                <i class="fas fa-flag-checkered"></i>
+                <input type="text" id="destination" placeholder="Destino final">
+            </div>
+
+            <button class="btn btn-primary" onclick="calculateRoute()">
+                <i class="fas fa-calculator"></i> CALCULAR TARIFA
+            </button>
+        </div>
+
+        <div class="card" id="result">
+            <div id="route-info"></div>
+            <div class="price-tag" id="total-price"></div>
+            <button class="btn btn-whatsapp" id="ws-btn" onclick="sendWhatsApp()">
+                <i class="fab fa-whatsapp"></i> SOLICITAR AHORA
+            </button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+    <script>
+        // 4.1 Inicialización del Mapa
+        let map = L.map('map').setView([15.5042, -88.0250], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        let routingControl = null;
+
+        // 4.2 Configuración de Tarifas (Según tu Estructura de Costos)
+        const CONFIG = {
+            base: 40,        // Lps
+            perKm: 12,       // Lps
+            extraStop: 15    // Lps
+        };
+
+        // 4.3 Manejo de Paradas
+        function addStop() {
+            const container = document.getElementById('stops-container');
+            const div = document.createElement('div');
+            div.className = 'stop-row';
+            div.innerHTML = `
+                <div class="input-group" style="flex:1; margin-bottom:0;">
+                    <i class="fas fa-map-pin"></i>
+                    <input type="text" class="stop-input" placeholder="Parada adicional">
+                </div>
+                <button class="btn-remove" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        // 4.4 Geocodificación (Convertir texto a coordenadas)
+        async function getCoords(address) {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+                const data = await response.json();
+                if (data.length > 0) return L.latLng(data[0].lat, data[0].lon);
+                throw new Error("No se encontró: " + address);
+            } catch (e) { alert(e.message); return null; }
+        }
+
+        // 4.5 Cálculo de Ruta y Precios
+        async function calculateRoute() {
+            const originAddr = document.getElementById('origin').value;
+            const destAddr = document.getElementById('destination').value;
+            const stopInputs = document.querySelectorAll('.stop-input');
+
+            if (!originAddr || !destAddr) return alert("Origen y Destino son obligatorios");
+
+            const waypoints = [];
+            const start = await getCoords(originAddr);
+            if (!start) return;
+            waypoints.push(start);
+
+            for (let input of stopInputs) {
+                if (input.value) {
+                    const stop = await getCoords(input.value);
+                    if (stop) waypoints.push(stop);
+                }
+            }
+
+            const end = await getCoords(destAddr);
+            if (!end) return;
+            waypoints.push(end);
+
+            if (routingControl) map.removeControl(routingControl);
+
+            routingControl = L.Routing.control({
+                waypoints: waypoints,
+                routeWhileDragging: false,
+                createMarker: () => null // Limpia marcadores por defecto para usar personalizados después
+            }).addTo(map);
+
+            routingControl.on('routesfound', function(e) {
+                const routes = e.routes;
+                const distance = routes[0].summary.totalDistance / 1000; // a KM
+                const stopsCount = waypoints.length - 2;
+                
+                // Lógica de Cobro
+                const total = CONFIG.base + (distance * CONFIG.perKm) + (stopsCount * CONFIG.extraStop);
+
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('route-info').innerHTML = `
+                    <p><i class="fas fa-road"></i> Distancia: <strong>${distance.toFixed(2)} km</strong></p>
+                    <p><i class="fas fa-layer-group"></i> Paradas: <strong>${stopsCount}</strong></p>
+                `;
+                document.getElementById('total-price').innerText = `L. ${total.toFixed(2)}`;
+                document.getElementById('ws-btn').style.display = 'block';
+            });
+        }
+
+        // 4.6 Integración WhatsApp
+        function sendWhatsApp() {
+            const price = document.getElementById('total-price').innerText;
+            const origin = document.getElementById('origin').value;
+            const dest = document.getElementById('destination').value;
+            const msg = `*NUEVO PEDIDO COTÍZAME*%0A📍 *Origen:* ${origin}%0A🏁 *Destino:* ${dest}%0A💰 *Total Cotizado:* ${price}%0A---%0A_Enviado desde mi Cotizador Web_`;
+            window.open(`https://wa.me/50433290036?text=${msg}`);
+        }
+    </script>
+</body>
+</html>
